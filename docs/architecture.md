@@ -52,11 +52,17 @@ ScadekOS initrd/userspace/configs
 ```
 
 This keeps the submodule source tree clean while letting ScadekOS own `/init`,
-`/hello`, and OS-level configuration.
+`/hello`, `/grant-test`, `/ring-test`, the minimal runtime helpers, and OS-level
+configuration.
 
-## M22 Limitation
+## M24 Runtime Shape
 
-SCDK M22 flat user programs receive a single bootstrap endpoint capability.
-ScadekOS `/init` receives the proc endpoint so it can request `/hello` startup.
-The spawned `/hello` receives the console endpoint through the loader path and
-emits the visible ScadekOS boot marker.
+SCDK M24 flat user programs receive a single bootstrap endpoint capability.
+ScadekOS keeps the runtime deliberately small and SCDK-native:
+
+- endpoint calls are explicit message sends
+- grants are created through `SCDK_SYS_GRANT_CREATE`
+- rings are created, bound, submitted, and polled through the M24 ring syscalls
+- payload access for ring console writes goes through grants
+
+This is a helper layer for current demos, not a libc or POSIX ABI.

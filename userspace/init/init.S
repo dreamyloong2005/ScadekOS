@@ -1,10 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 /* Copyright (c) 2026 The Scadek OS Project contributors */
 
-.set SCDK_SYS_ENDPOINT_CALL, 1
-.set SCDK_SYS_EXIT, 3
-.set SCDK_SERVICE_PROC, 4
-.set SCDK_MSG_PROCESS_SPAWN, 9
+#include "@SCADEK_RUNTIME_INC@"
 
 .section .text
 .global _start
@@ -12,25 +9,17 @@
 _start:
     movq %rdi, %rbx
 
-    subq $64, %rsp
+    subq $SCADEK_MSG_SIZE, %rsp
     movq %rsp, %rsi
 
-    movq $0, 0(%rsi)
-    movq $SCDK_SERVICE_PROC, 8(%rsi)
-    movq $SCDK_MSG_PROCESS_SPAWN, 16(%rsi)
-    leaq hello_path(%rip), %rax
-    movq %rax, 24(%rsi)
-    movq $(hello_path_end - hello_path), 32(%rsi)
-    movq $0, 40(%rsi)
-    movq $0, 48(%rsi)
-    movq $0, 56(%rsi)
+    scadek_proc_spawn %rsi, hello_path, (hello_path_end - hello_path)
+    scadek_endpoint_call %rbx, %rsi
 
-    movq $SCDK_SYS_ENDPOINT_CALL, %rax
-    movq %rbx, %rdi
-    syscall
+    movq %rsp, %rsi
+    scadek_proc_spawn %rsi, ring_path, (ring_path_end - ring_path)
+    scadek_endpoint_call %rbx, %rsi
 
-    movq $SCDK_SYS_EXIT, %rax
-    syscall
+    scadek_exit
 
 .Lhalt:
     hlt
@@ -39,7 +28,9 @@ _start:
 hello_path:
     .ascii "/hello"
 hello_path_end:
+ring_path:
+    .ascii "/ring-test"
+ring_path_end:
 .size _start, . - _start
 
 .section .note.GNU-stack,"",@progbits
-

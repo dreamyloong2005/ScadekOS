@@ -16,22 +16,31 @@
 - Let ScadekOS provide user programs outside the SCDK submodule.
 - Keep SCDK responsible for the kernel and image construction primitives.
 - Produce `build/scadekos.iso` without editing kernel-owned payload stubs.
-- Status: implemented for M0 using top-level initrd and ISO packaging.
+- Status: implemented since the initial repository split using top-level initrd
+  and ISO packaging.
 
 ## Stage 2: SCDK-Native System Startup
 
 - Replace demo `/init` with ScadekOS-owned `/init`.
 - Define a ScadekOS boot configuration format.
 - Start services through SCDK-native proc, VFS, endpoint, and capability paths.
-- Status: initial `/init` spawns `/hello` through proc service on SCDK M22.
+- Status: `/init` spawns `/hello` and `/ring-test` through proc service on SCDK M24.
 
-## Stage 3: Service Policy
+## Stage 3: Grant/Ring Runtime Demos
+
+- Add a small SCDK-native flat-binary runtime include.
+- Add `/grant-test` for user-visible grant create/read/revoke validation.
+- Add `/ring-test` for grant-backed ring descriptor submission and completion polling.
+- Validate M24 grant/ring logs in the smoke test.
+- Status: implemented in ScadekOS `0.1.0-dev.2`.
+
+## Stage 4: Service Policy
 
 - Define default capability distribution.
 - Define service launch order.
 - Keep tmpfs, VFS, proc, console, and future devmgr interactions message-based.
 
-## Stage 4: Release Discipline
+## Stage 5: Release Discipline
 
 - Depend on tagged SCDK kernel releases.
 - Keep ScadekOS releases tied to explicit SCDK commits or tags.

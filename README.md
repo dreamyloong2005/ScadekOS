@@ -22,28 +22,40 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-dev.1`
-Kernel version: `SCDK 0.3.0-alpha.1`
-Kernel commit: `c6b018b2962714cac9f400fd6a690db032e70735`
+Current version: `0.1.0-dev.2`
+Kernel version: `SCDK 0.3.0-alpha.2`
+Kernel commit: `6d617e2bef829fc0e87d0b567c2081c21962e123`
 
-This repository currently implements **ScadekOS M0: SCDK M22 integration
-baseline**.
+This repository currently implements **ScadekOS dev.2: SCDK M24 grant/ring
+integration baseline**.
 
 The top-level build uses the pinned SCDK submodule for the kernel core, then
 packages ScadekOS-owned payloads into the boot initrd:
 
 - `userspace/init/init.S` becomes `/init`
 - `userspace/hello/hello.S` becomes `/hello`
-- `initrd/etc/scdk.conf` remains for SCDK M22 compatibility
+- `userspace/grant/grant.S` becomes `/grant-test`
+- `userspace/ring/ring.S` becomes `/ring-test`
+- `userspace/runtime/scadek_runtime.inc` is the SCDK-native flat-binary helper layer
+- `initrd/etc/scdk.conf` remains for SCDK boot-configuration compatibility
 - `initrd/etc/scadekos.conf` is the ScadekOS boot policy placeholder
 - `VERSION` is packaged as `/etc/scadekos.version`
 - `KERNEL_VERSION` is packaged as `/etc/scdk.version`
 - `initrd/hello.txt` is the VFS/tmpfs smoke-test file
 
-The M22 user ABI passes one bootstrap endpoint capability to a flat user
-program. ScadekOS `/init` receives the proc endpoint and spawns `/hello`.
-`/hello` receives the console endpoint through the proc/loader path and prints
-the ScadekOS boot marker.
+The M24 user ABI still passes one bootstrap endpoint capability to a flat user
+program. ScadekOS `/init` receives the proc endpoint and spawns `/hello` and
+`/ring-test`. The kernel M24 self-tests load `/grant-test` through the
+grant-test endpoint and `/ring-test` through the console endpoint.
+
+The grant/ring demos cover:
+
+- read-only user grant creation
+- service-side grant reads without raw user pointers
+- write denial, bounds rejection, and revoke validation
+- ring creation and endpoint binding
+- 16 descriptor submissions
+- 16 completion polls
 
 ## Build
 
@@ -105,17 +117,23 @@ SCADEKOS_SCDK_DEVTOOLS=/home/taosiyuan/dev/SCDK/.devtools make smoke
 ```
 
 The smoke test boots QEMU briefly, captures serial output in
-`build/scadekos-boot.log`, and verifies these M0 markers:
+`build/scadekos-boot.log`, and verifies these dev.2 markers:
 
 ```text
 [initrd] file: /etc/scadekos.conf
 [initrd] file: /etc/scdk.version
+[initrd] file: /grant-test
+[initrd] file: /ring-test
 [loader] loading /init
 [proc] spawn /hello
-[scadekos] version 0.1.0-dev.1
+[scadekos] version 0.1.0-dev.2
 [scadekos] hello from /hello
-[boot] scadekos m0 complete
-[boot] milestone 22 complete
+[grant] user read grant pass
+[grant] revoke pass
+[ring] submit batch 16
+[ring] completion batch 16 pass
+[boot] scadekos dev.2 complete
+[boot] milestone 24 complete
 ```
 
 ## Kernel Submodule
