@@ -4,7 +4,7 @@
 #include <scadek/scadek.h>
 
 #ifndef SCADEKOS_VERSION
-#define SCADEKOS_VERSION "0.1.0-devpreview.1"
+#define SCADEKOS_VERSION "0.1.0-devpreview.2"
 #endif
 
 void _start(scadek_cap_t console) {
@@ -12,7 +12,7 @@ void _start(scadek_cap_t console) {
         "[scadekos] version " SCADEKOS_VERSION "\r\n"
         "[hello] hello from ScadekOS\r\n"
         "[user] hello from spawned process\r\n"
-        "[boot] scadekos devpreview.1 user payload reached console endpoint\r\n";
+        "[boot] scadekos devpreview.2 user payload reached console endpoint\r\n";
 
     (void)scadek_console_write(console, message, sizeof(message) - 1u);
     scadek_exit(0);

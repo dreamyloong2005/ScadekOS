@@ -6,7 +6,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 LOG=${1:-"$ROOT/build/scadekos-no-serial.log"}
 SHOT=${SCADEKOS_NO_SERIAL_SCREENSHOT:-"$ROOT/build/scadekos-no-serial.ppm"}
-BOOT_DELAY=${SCADEKOS_NO_SERIAL_DELAY:-5.3}
+BOOT_DELAY=${SCADEKOS_NO_SERIAL_DELAY:-8.5}
 TIMEOUT=${SCADEKOS_QEMU_TIMEOUT:-14s}
 
 cd "$ROOT"

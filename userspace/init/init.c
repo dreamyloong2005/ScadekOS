@@ -3,11 +3,12 @@
 
 #include <scadek/scadek.h>
 
-void _start(scadek_cap_t proc) {
-    (void)scadek_proc_spawn(proc, "/runner");
-    (void)scadek_proc_spawn(proc, "/bin/hello");
-    (void)scadek_proc_spawn(proc, "/ring-test");
-    (void)scadek_proc_spawn(proc, "/prompt");
+void _start(scadek_cap_t session) {
+    scadek_cap_t proc = 0;
+
+    if (scadek_service_lookup(session, SCADEK_SERVICE_PROC, &proc) == SCADEK_OK) {
+        (void)scadek_proc_spawn_with_bootstrap(proc, "/runner", session);
+    }
 
     scadek_exit(0);
 }

@@ -8,5 +8,6 @@ cat /etc/scadekos.conf
 cat /etc/scdk.version
 run /bin/hello
 rings
+grants
 services
 caps

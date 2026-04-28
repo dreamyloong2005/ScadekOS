@@ -22,8 +22,8 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-devpreview.1`
-Kernel version: `SCDK 0.4.0-alpha.1`
+Current version: `0.1.0-devpreview.2`
+Kernel version: `SCDK 0.4.0-alpha.2`
 Kernel commit: `842895b4a195c7b4bcad016d7dcdea6e3fa5f196`
 
 This repository currently implements **ScadekOS devpreview.1 over the SCDK M30

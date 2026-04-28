@@ -20,7 +20,7 @@ SCDK_ISO := $(KERNEL_DIR)/build/scdk.iso
 SCADEKOS_ISO := $(BUILD_DIR)/scadekos.iso
 INITRD_TAR_FILES := init hello bin/hello grant-test ring-test runner prompt etc/scdk.conf etc/scadekos.conf etc/scadek.rc etc/scadekos.version etc/scdk.version hello.txt
 
-.PHONY: all submodules check-kernel-env prepare-payload iso run run-framebuffer smoke smoke-no-serial clean
+.PHONY: all submodules check-kernel-env prepare-payload iso run run-framebuffer smoke smoke-no-serial smoke-keyboard clean
 
 all: iso
 
@@ -103,6 +103,9 @@ smoke:
 
 smoke-no-serial:
 	tools/smoke-qemu-no-serial.sh
+
+smoke-keyboard:
+	tools/smoke-keyboard.sh
 
 clean:
 	$(MAKE) -C $(KERNEL_DIR) clean

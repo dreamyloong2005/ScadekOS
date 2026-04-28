@@ -13,6 +13,7 @@ USER_LOAD_ADDR=0x0000000000400000
 SCADEKOS_VERSION=$(sed -n '1p' "$ROOT/VERSION")
 SCDK_VERSION=$(sed -n 's/^SCDK_VERSION=//p' "$ROOT/KERNEL_VERSION")
 VERSION_HEADER="$BUILD_USER_DIR/generated_version.h"
+USER_LINKER="$BUILD_USER_DIR/user.ld"
 
 cd "$ROOT/kernel/scdk"
 . ../../tools/kernel-env.sh
@@ -36,6 +37,21 @@ mkdir -p "$LIB_BUILD_DIR" "$INITRD_ROOT" "$BUILD_USER_DIR"
     printf '#endif\n'
 } > "$VERSION_HEADER"
 
+{
+    printf 'ENTRY(_start)\n'
+    printf 'SECTIONS\n'
+    printf '{\n'
+    printf '  . = %s;\n' "$USER_LOAD_ADDR"
+    printf '  .text : {\n'
+    printf '    *(.text.start)\n'
+    printf '    *(.text .text.*)\n'
+    printf '    *(.rodata .rodata.*)\n'
+    printf '  }\n'
+    printf '  .data : { *(.data .data.*) }\n'
+    printf '  .bss : { *(.bss .bss.* COMMON) }\n'
+    printf '}\n'
+} > "$USER_LINKER"
+
 "$CC" $USER_CFLAGS -c "$ROOT/userspace/libscadek/scadek.S" -o "$LIB_BUILD_DIR/scadek.o"
 "$CC" $USER_CFLAGS -c "$ROOT/userspace/libscadek/scadek.c" -o "$LIB_BUILD_DIR/scadek_c.o"
 "$AR" rcs "$LIBSCADEK_A" "$LIB_BUILD_DIR/scadek.o" "$LIB_BUILD_DIR/scadek_c.o"
@@ -54,7 +70,7 @@ build_user() {
     else
         "$CC" $USER_CFLAGS -c "$src_s" -o "$obj"
     fi
-    "$LD" -nostdlib -static -z noexecstack -Ttext="$USER_LOAD_ADDR" -o "$elf" "$obj" "$LIBSCADEK_A"
+    "$LD" -nostdlib -static -z noexecstack -T "$USER_LINKER" -o "$elf" "$obj" "$LIBSCADEK_A"
     mkdir -p "$(dirname "$bin")"
     "$OBJCOPY" -O binary "$elf" "$bin"
 }

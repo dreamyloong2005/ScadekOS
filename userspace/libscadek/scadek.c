@@ -194,7 +194,37 @@ scadek_status_t scadek_tty_read_line(scadek_cap_t tty,
     }
 }
 
-scadek_status_t scadek_proc_spawn(scadek_cap_t proc, const char *path) {
+scadek_status_t scadek_service_lookup(scadek_cap_t session,
+                                      uint64_t service_id,
+                                      scadek_cap_t *out_endpoint) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (session == 0 || service_id == SCADEK_SERVICE_NONE || out_endpoint == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message,
+                        0,
+                        SCADEK_SERVICE_SESSION,
+                        SCADEK_MSG_SERVICE_LOOKUP);
+    message.arg0 = service_id;
+
+    status = scadek_endpoint_call(session, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    *out_endpoint = message.arg0;
+    return message.arg0 == 0 ? SCADEK_ERR_NOENT : SCADEK_OK;
+}
+
+scadek_status_t scadek_proc_spawn_with_bootstrap(scadek_cap_t proc,
+                                                 const char *path,
+                                                 scadek_cap_t bootstrap) {
     struct scadek_message message;
     scadek_status_t status;
 
@@ -208,8 +238,148 @@ scadek_status_t scadek_proc_spawn(scadek_cap_t proc, const char *path) {
                         SCADEK_MSG_PROCESS_SPAWN);
     message.arg0 = (uint64_t)(uintptr_t)path;
     message.arg1 = scadek_strlen(path);
+    message.arg2 = bootstrap;
 
     status = scadek_endpoint_call(proc, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+
+    return (scadek_status_t)message.status;
+}
+
+scadek_status_t scadek_proc_spawn(scadek_cap_t proc, const char *path) {
+    return scadek_proc_spawn_with_bootstrap(proc, path, 0);
+}
+
+scadek_status_t scadek_vfs_stat(scadek_cap_t vfs,
+                                const char *path,
+                                struct scadek_vfs_stat *out) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (vfs == 0 || path == 0 || out == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message, 0, SCADEK_SERVICE_VFS, SCADEK_MSG_STAT);
+    message.arg0 = (uint64_t)(uintptr_t)path;
+    message.arg1 = scadek_strlen(path);
+
+    status = scadek_endpoint_call(vfs, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    out->type = message.arg0;
+    out->size = message.arg1;
+    return SCADEK_OK;
+}
+
+scadek_status_t scadek_vfs_listdir(scadek_cap_t vfs,
+                                   const char *path,
+                                   struct scadek_vfs_dirent *entries,
+                                   uint64_t capacity,
+                                   uint64_t *out_count) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (vfs == 0 || path == 0 || entries == 0 || capacity == 0 || out_count == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message, 0, SCADEK_SERVICE_VFS, SCADEK_MSG_LISTDIR);
+    message.arg0 = (uint64_t)(uintptr_t)path;
+    message.arg1 = scadek_strlen(path);
+    message.arg2 = (uint64_t)(uintptr_t)entries;
+    message.arg3 = capacity * sizeof(entries[0]);
+
+    status = scadek_endpoint_call(vfs, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    *out_count = message.arg0;
+    return SCADEK_OK;
+}
+
+scadek_status_t scadek_vfs_open(scadek_cap_t vfs,
+                                const char *path,
+                                scadek_cap_t *out_file,
+                                uint64_t *out_size) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (vfs == 0 || path == 0 || out_file == 0 || out_size == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message, 0, SCADEK_SERVICE_VFS, SCADEK_MSG_OPEN);
+    message.arg0 = (uint64_t)(uintptr_t)path;
+    message.arg1 = scadek_strlen(path);
+
+    status = scadek_endpoint_call(vfs, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    *out_file = message.arg0;
+    *out_size = message.arg1;
+    return message.arg0 == 0 ? SCADEK_ERR_NOENT : SCADEK_OK;
+}
+
+scadek_status_t scadek_vfs_read(scadek_cap_t vfs,
+                                scadek_cap_t file,
+                                uint64_t offset,
+                                char *buffer,
+                                uint64_t capacity,
+                                uint64_t *out_read) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (vfs == 0 || file == 0 || buffer == 0 || capacity == 0 || out_read == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message, 0, SCADEK_SERVICE_VFS, SCADEK_MSG_READ);
+    message.arg0 = file;
+    message.arg1 = offset;
+    message.arg2 = (uint64_t)(uintptr_t)buffer;
+    message.arg3 = capacity;
+
+    status = scadek_endpoint_call(vfs, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    *out_read = message.arg0;
+    return SCADEK_OK;
+}
+
+scadek_status_t scadek_vfs_close(scadek_cap_t vfs, scadek_cap_t file) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (vfs == 0 || file == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message, 0, SCADEK_SERVICE_VFS, SCADEK_MSG_CLOSE);
+    message.arg0 = file;
+
+    status = scadek_endpoint_call(vfs, &message);
     if (status != SCADEK_OK) {
         return status;
     }

@@ -27,6 +27,7 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_RIGHT_BIND     (1ull << 6)
 #define SCADEK_RIGHT_REVOKE   (1ull << 7)
 
+#define SCADEK_SERVICE_NONE       0ull
 #define SCADEK_SERVICE_CONSOLE    1ull
 #define SCADEK_SERVICE_TMPFS      2ull
 #define SCADEK_SERVICE_VFS        3ull
@@ -34,6 +35,7 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_SERVICE_GRANT_TEST 5ull
 #define SCADEK_SERVICE_DEVMGR     6ull
 #define SCADEK_SERVICE_TTY        7ull
+#define SCADEK_SERVICE_SESSION    8ull
 
 #define SCADEK_MSG_NONE              0ull
 #define SCADEK_MSG_OPEN              1ull
@@ -58,6 +60,9 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_MSG_TTY_BIND_INPUT_RING 0x2101ull
 #define SCADEK_MSG_TTY_GET_INFO        0x2102ull
 
+#define SCADEK_MSG_STAT    0x3000ull
+#define SCADEK_MSG_LISTDIR 0x3001ull
+
 #define SCADEK_RING_OP_NONE          0ull
 #define SCADEK_RING_OP_CONSOLE_WRITE 1ull
 #define SCADEK_RING_BATCH            16ull
@@ -69,6 +74,11 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_INPUT_MOD_SHIFT (1u << 0)
 
 #define SCADEK_CONSOLE_WRITE_MAX 128ull
+#define SCADEK_VFS_MAX_NAME 64ull
+
+#define SCADEK_VFS_NODE_NONE 0ull
+#define SCADEK_VFS_NODE_FILE 1ull
+#define SCADEK_VFS_NODE_DIR  2ull
 
 struct scadek_message {
     uint64_t sender;
@@ -106,6 +116,17 @@ struct scadek_input_event {
     uint32_t flags;
 };
 
+struct scadek_vfs_stat {
+    uint64_t type;
+    uint64_t size;
+};
+
+struct scadek_vfs_dirent {
+    char name[SCADEK_VFS_MAX_NAME];
+    uint64_t type;
+    uint64_t size;
+};
+
 uint64_t scadek_strlen(const char *s);
 void scadek_message_init(struct scadek_message *message,
                          uint64_t sender,
@@ -137,7 +158,32 @@ scadek_status_t scadek_tty_poll_event(scadek_cap_t tty,
 scadek_status_t scadek_tty_read_line(scadek_cap_t tty,
                                      char *buffer,
                                      uint64_t capacity);
+scadek_status_t scadek_service_lookup(scadek_cap_t session,
+                                      uint64_t service_id,
+                                      scadek_cap_t *out_endpoint);
 scadek_status_t scadek_proc_spawn(scadek_cap_t proc, const char *path);
+scadek_status_t scadek_proc_spawn_with_bootstrap(scadek_cap_t proc,
+                                                 const char *path,
+                                                 scadek_cap_t bootstrap);
+scadek_status_t scadek_vfs_stat(scadek_cap_t vfs,
+                                const char *path,
+                                struct scadek_vfs_stat *out);
+scadek_status_t scadek_vfs_listdir(scadek_cap_t vfs,
+                                   const char *path,
+                                   struct scadek_vfs_dirent *entries,
+                                   uint64_t capacity,
+                                   uint64_t *out_count);
+scadek_status_t scadek_vfs_open(scadek_cap_t vfs,
+                                const char *path,
+                                scadek_cap_t *out_file,
+                                uint64_t *out_size);
+scadek_status_t scadek_vfs_read(scadek_cap_t vfs,
+                                scadek_cap_t file,
+                                uint64_t offset,
+                                char *buffer,
+                                uint64_t capacity,
+                                uint64_t *out_read);
+scadek_status_t scadek_vfs_close(scadek_cap_t vfs, scadek_cap_t file);
 __attribute__((noreturn)) void scadek_exit(uint64_t status);
 
 #endif
