@@ -17,16 +17,19 @@ make iso >"$MONITOR_LOG" 2>&1
 status=0
 (
     sleep 8
-    printf 'sendkey h\n'
-    sleep 0.1
-    printf 'sendkey e\n'
-    sleep 0.1
-    printf 'sendkey l\n'
-    sleep 0.1
-    printf 'sendkey p\n'
-    sleep 0.1
-    printf 'sendkey ret\n'
-    sleep 1
+    send_command() {
+        for key in "$@"; do
+            printf 'sendkey %s\n' "$key"
+            sleep 0.12
+        done
+        printf 'sendkey ret\n'
+        sleep 0.8
+    }
+
+    send_command h e l p
+    send_command v e r s i o n
+    send_command h e l p
+    sleep 2
     printf 'quit\n'
 ) | timeout "$TIMEOUT" qemu-system-x86_64 \
         -M q35 \
@@ -56,5 +59,16 @@ require_log() {
 require_log "[scadekos] interactive console ready"
 require_log "scadek:/> help"
 require_log "help version clear pwd cd ls cat run services caps grants rings exit"
+require_log "scadek:/> version"
+require_log "SCDK: v0.4.0-alpha.3"
+require_log "ScadekOS: v0.1.0-devpreview.3"
+
+help_count=$(grep -F "scadek:/> help" "$LOG" | wc -l)
+if [ "$help_count" -lt 2 ]; then
+    printf 'missing second interactive help prompt after version: %s occurrences\n' "$help_count" >&2
+    printf 'serial log: %s\n' "$LOG" >&2
+    printf 'monitor log: %s\n' "$MONITOR_LOG" >&2
+    exit 1
+fi
 
 printf '[scadekos] keyboard smoke pass: %s\n' "$LOG"

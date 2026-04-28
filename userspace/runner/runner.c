@@ -4,11 +4,11 @@
 #include <scadek/scadek.h>
 
 #ifndef SCADEKOS_VERSION
-#define SCADEKOS_VERSION "0.1.0-devpreview.2"
+#define SCADEKOS_VERSION "0.1.0-devpreview.3"
 #endif
 
 #ifndef SCDK_VERSION
-#define SCDK_VERSION "0.4.0-alpha.2"
+#define SCDK_VERSION "0.4.0-alpha.3"
 #endif
 
 #define RUNNER_PATH_MAX 128u

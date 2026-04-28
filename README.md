@@ -22,12 +22,12 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-devpreview.2`
-Kernel version: `SCDK 0.4.0-alpha.2`
-Kernel commit: `842895b4a195c7b4bcad016d7dcdea6e3fa5f196`
+Current version: `0.1.0-devpreview.3`
+Kernel version: `SCDK 0.4.0-alpha.3`
+Kernel commit: `c3457116a64471c800a205027b434d42ece526ce`
 
-This repository currently implements **ScadekOS devpreview.1 over the SCDK M30
-console/TTY and architecture-review baseline**.
+This repository currently implements **ScadekOS devpreview.3 over the SCDK M31
+kernel/OS parallel baseline**.
 
 The top-level build uses the pinned SCDK submodule for the kernel core, then
 packages ScadekOS-owned payloads into the boot initrd:
@@ -52,7 +52,7 @@ user program. ScadekOS `/init` receives the proc endpoint and spawns `/runner`,
 the console endpoint and use grant-backed console messages rather than direct
 serial or framebuffer access.
 
-The devpreview.1 boot path makes these M30 properties visible:
+The devpreview.3 boot path makes these SCDK properties visible:
 
 - local framebuffer text output before ScadekOS `/init`
 - ScadekOS command-runner output and prompt through the console endpoint
@@ -62,7 +62,7 @@ The devpreview.1 boot path makes these M30 properties visible:
 - user fault isolation without taking down the kernel
 - timer/preemption markers
 - device-manager fake device and queue authorization markers
-- M30 architecture-review completion markers
+- M30 architecture-review completion markers retained under the M31 path
 
 `libscadek` currently wraps endpoint calls, grant create/revoke, ring
 create/bind/submit/poll, console writes, TTY polling helpers, proc spawn,
@@ -138,7 +138,7 @@ SCADEKOS_SCDK_DEVTOOLS=/home/taosiyuan/dev/SCDK/.devtools make smoke
 ```
 
 The smoke test boots QEMU briefly, captures serial output in
-`build/scadekos-boot.log`, and verifies devpreview.1 plus M30 markers:
+`build/scadekos-boot.log`, and verifies devpreview.3 plus M31 markers:
 
 ```text
 [console] framebuffer text backend ok

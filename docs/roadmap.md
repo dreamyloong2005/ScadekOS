@@ -40,7 +40,7 @@
 - Define default capability distribution.
 - Define service launch order.
 - Keep tmpfs, VFS, proc, console, and future devmgr interactions message-based.
-- Status: devpreview.1 uses a deterministic `/etc/scadek.rc` preview runner and
+- Status: devpreview.3 uses a deterministic `/etc/scadek.rc` preview runner and
   validates no-serial framebuffer boot with `make smoke-no-serial`.
 
 ## Stage 5: Release Discipline
