@@ -53,20 +53,24 @@ ScadekOS initrd/userspace/configs
 ```
 
 This keeps the submodule source tree clean while letting ScadekOS own `/init`,
-`/hello`, `/grant-test`, `/ring-test`, the minimal `libscadek` user ABI
-library, and OS-level configuration.
+`/hello`, `/bin/hello`, `/grant-test`, `/ring-test`, `/runner`, `/prompt`, the
+minimal `libscadek` user ABI library, and OS-level configuration.
 
-## M24 libscadek Shape
+## M30 libscadek Shape
 
-SCDK M24 flat user programs receive a single bootstrap endpoint capability.
+SCDK M30 flat user programs receive a single bootstrap endpoint capability.
 ScadekOS keeps `libscadek` deliberately small and SCDK-native:
 
 - endpoint calls are explicit message sends through `scadek_endpoint_call()`
 - grants are created and revoked through `scadek_grant_create()` and
   `scadek_grant_revoke()`
+- console output uses grant-backed `SCDK_MSG_CONSOLE_WRITE` through
+  `scadek_console_write()`
+- TTY input wrappers exist for callers that receive a TTY endpoint capability
 - rings are created, bound, submitted, and polled through the
   `scadek_ring_*()` calls
 - payload access for ring console writes goes through grants
+- `/init` uses the proc endpoint to spawn ScadekOS-owned flat programs
 - `scadek_yield()` and `scadek_exit()` wrap the minimal task-control syscalls
 
 This is a helper library for current demos, not a libc or POSIX ABI.

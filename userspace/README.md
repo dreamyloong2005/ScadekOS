@@ -5,8 +5,10 @@ This directory is for ScadekOS-owned user programs.
 The current flat binaries are:
 
 - `/init`: starts ScadekOS user programs through the SCDK proc service.
-- `/hello`: basic console endpoint/message demo.
-- `/grant-test`: user-visible grant demo used by SCDK M24 self-tests.
+- `/hello` and `/bin/hello`: grant-backed console endpoint demo.
+- `/runner`: deterministic devpreview command-runner output.
+- `/prompt`: displays the framebuffer prompt marker.
+- `/grant-test`: user-visible grant demo used by SCDK M30 self-tests.
 - `/ring-test`: user-visible ring + grant data-plane demo.
 
 The current flat binaries link against `libscadek`, a tiny SCDK-native user ABI

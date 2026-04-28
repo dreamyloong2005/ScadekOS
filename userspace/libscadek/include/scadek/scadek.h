@@ -32,20 +32,43 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_SERVICE_VFS        3ull
 #define SCADEK_SERVICE_PROC       4ull
 #define SCADEK_SERVICE_GRANT_TEST 5ull
+#define SCADEK_SERVICE_DEVMGR     6ull
+#define SCADEK_SERVICE_TTY        7ull
 
 #define SCADEK_MSG_NONE              0ull
 #define SCADEK_MSG_OPEN              1ull
 #define SCADEK_MSG_CLOSE             2ull
 #define SCADEK_MSG_READ              3ull
 #define SCADEK_MSG_WRITE             4ull
+#define SCADEK_MSG_DEVICE_REGISTER   5ull
+#define SCADEK_MSG_DEVICE_QUEUE_BIND 6ull
+#define SCADEK_MSG_SERVICE_REGISTER  7ull
+#define SCADEK_MSG_SERVICE_LOOKUP    8ull
 #define SCADEK_MSG_PROCESS_SPAWN     9ull
 #define SCADEK_MSG_PROCESS_EXIT      10ull
 #define SCADEK_MSG_PROCESS_WAIT_STUB 11ull
 #define SCADEK_MSG_RING_PROCESS      12ull
 
+#define SCADEK_MSG_CONSOLE_WRITE            0x2000ull
+#define SCADEK_MSG_CONSOLE_CLEAR            0x2001ull
+#define SCADEK_MSG_CONSOLE_GET_INFO         0x2002ull
+#define SCADEK_MSG_CONSOLE_BIND_OUTPUT_RING 0x2003ull
+
+#define SCADEK_MSG_TTY_POLL_EVENT      0x2100ull
+#define SCADEK_MSG_TTY_BIND_INPUT_RING 0x2101ull
+#define SCADEK_MSG_TTY_GET_INFO        0x2102ull
+
 #define SCADEK_RING_OP_NONE          0ull
 #define SCADEK_RING_OP_CONSOLE_WRITE 1ull
 #define SCADEK_RING_BATCH            16ull
+
+#define SCADEK_INPUT_NONE     0u
+#define SCADEK_INPUT_KEY_DOWN 1u
+#define SCADEK_INPUT_KEY_UP   2u
+
+#define SCADEK_INPUT_MOD_SHIFT (1u << 0)
+
+#define SCADEK_CONSOLE_WRITE_MAX 128ull
 
 struct scadek_message {
     uint64_t sender;
@@ -74,6 +97,20 @@ struct scadek_completion {
     uint64_t result1;
 };
 
+struct scadek_input_event {
+    uint64_t timestamp;
+    uint32_t type;
+    uint32_t keycode;
+    uint32_t ascii;
+    uint32_t modifiers;
+    uint32_t flags;
+};
+
+uint64_t scadek_strlen(const char *s);
+void scadek_message_init(struct scadek_message *message,
+                         uint64_t sender,
+                         uint64_t target,
+                         uint64_t type);
 scadek_status_t scadek_endpoint_call(scadek_cap_t endpoint,
                                      struct scadek_message *message);
 scadek_cap_t scadek_grant_create(const void *buffer,
@@ -90,6 +127,17 @@ uint64_t scadek_ring_poll(scadek_cap_t ring,
                           struct scadek_completion *completions,
                           uint64_t count);
 scadek_status_t scadek_yield(void);
+scadek_status_t scadek_console_write(scadek_cap_t console,
+                                     const char *buffer,
+                                     uint64_t length);
+scadek_status_t scadek_console_puts(scadek_cap_t console, const char *s);
+scadek_status_t scadek_console_clear(scadek_cap_t console);
+scadek_status_t scadek_tty_poll_event(scadek_cap_t tty,
+                                      struct scadek_input_event *out);
+scadek_status_t scadek_tty_read_line(scadek_cap_t tty,
+                                     char *buffer,
+                                     uint64_t capacity);
+scadek_status_t scadek_proc_spawn(scadek_cap_t proc, const char *path);
 __attribute__((noreturn)) void scadek_exit(uint64_t status);
 
 #endif

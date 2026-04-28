@@ -24,21 +24,24 @@
 - Replace demo `/init` with ScadekOS-owned `/init`.
 - Define a ScadekOS boot configuration format.
 - Start services through SCDK-native proc, VFS, endpoint, and capability paths.
-- Status: `/init` spawns `/hello` and `/ring-test` through proc service on SCDK M24.
+- Status: `/init` spawns `/runner`, `/bin/hello`, `/ring-test`, and `/prompt`
+  through proc service on SCDK M30.
 
 ## Stage 3: Grant/Ring libscadek Demos
 
 - Add a small SCDK-native `libscadek` user ABI library.
 - Add `/grant-test` for user-visible grant create/read/revoke validation.
 - Add `/ring-test` for grant-backed ring descriptor submission and completion polling.
-- Validate M24 grant/ring logs in the smoke test.
-- Status: implemented in ScadekOS `0.1.0-dev.3`.
+- Validate grant/ring logs in the smoke test.
+- Status: implemented for the current SCDK M30 devpreview path.
 
 ## Stage 4: Service Policy
 
 - Define default capability distribution.
 - Define service launch order.
 - Keep tmpfs, VFS, proc, console, and future devmgr interactions message-based.
+- Status: devpreview.1 uses a deterministic `/etc/scadek.rc` preview runner and
+  validates no-serial framebuffer boot with `make smoke-no-serial`.
 
 ## Stage 5: Release Discipline
 

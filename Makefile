@@ -18,9 +18,9 @@ SCDK_KERNEL := $(SCDK_BUILD_DIR)/scdk.elf
 SCDK_INITRD := $(SCDK_BUILD_DIR)/scdk.initrd
 SCDK_ISO := $(KERNEL_DIR)/build/scdk.iso
 SCADEKOS_ISO := $(BUILD_DIR)/scadekos.iso
-INITRD_TAR_FILES := init hello grant-test ring-test etc/scdk.conf etc/scadekos.conf etc/scadekos.version etc/scdk.version hello.txt
+INITRD_TAR_FILES := init hello bin/hello grant-test ring-test runner prompt etc/scdk.conf etc/scadekos.conf etc/scadek.rc etc/scadekos.version etc/scdk.version hello.txt
 
-.PHONY: all submodules check-kernel-env prepare-payload iso run smoke clean
+.PHONY: all submodules check-kernel-env prepare-payload iso run run-framebuffer smoke smoke-no-serial clean
 
 all: iso
 
@@ -33,10 +33,12 @@ check-kernel-env: submodules
 prepare-payload:
 	rm -rf $(PAYLOAD_DIR) $(SCDK_INITRD_ROOT)
 	mkdir -p $(PAYLOAD_USER_DIR) $(PAYLOAD_INITRD_DIR)
-	cp userspace/init/init.S $(PAYLOAD_USER_DIR)/init.S
-	sed 's/@SCADEKOS_VERSION@/$(SCADEKOS_VERSION)/g' userspace/hello/hello.S > $(PAYLOAD_USER_DIR)/hello.S
+	cp userspace/init/init.c $(PAYLOAD_USER_DIR)/init.c
+	cp userspace/hello/hello.c $(PAYLOAD_USER_DIR)/hello.c
 	cp userspace/grant/grant.S $(PAYLOAD_USER_DIR)/grant.S
 	cp userspace/ring/ring.S $(PAYLOAD_USER_DIR)/ring.S
+	cp userspace/runner/runner.c $(PAYLOAD_USER_DIR)/runner.c
+	cp userspace/prompt/prompt.c $(PAYLOAD_USER_DIR)/prompt.c
 	cp -R initrd/. $(PAYLOAD_INITRD_DIR)/
 	mkdir -p $(PAYLOAD_INITRD_DIR)/etc
 	printf '%s\n' "$(SCADEKOS_VERSION)" > $(PAYLOAD_INITRD_DIR)/etc/scadekos.version
@@ -87,8 +89,20 @@ run: iso
 		-display none \
 		-no-reboot
 
+run-framebuffer: iso
+	qemu-system-x86_64 \
+		-M q35 \
+		-m 256M \
+		-cdrom $(SCADEKOS_ISO) \
+		-boot d \
+		-serial none \
+		-no-reboot
+
 smoke:
 	tools/smoke-qemu.sh
+
+smoke-no-serial:
+	tools/smoke-qemu-no-serial.sh
 
 clean:
 	$(MAKE) -C $(KERNEL_DIR) clean

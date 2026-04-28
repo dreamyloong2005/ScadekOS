@@ -22,44 +22,52 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-dev.3`
-Kernel version: `SCDK 0.3.0-alpha.2`
-Kernel commit: `6d617e2bef829fc0e87d0b567c2081c21962e123`
+Current version: `0.1.0-devpreview.1`
+Kernel version: `SCDK 0.4.0-alpha.1`
+Kernel commit: `842895b4a195c7b4bcad016d7dcdea6e3fa5f196`
 
-This repository currently implements **ScadekOS dev.3: minimal libscadek over
-the SCDK M24 grant/ring baseline**.
+This repository currently implements **ScadekOS devpreview.1 over the SCDK M30
+console/TTY and architecture-review baseline**.
 
 The top-level build uses the pinned SCDK submodule for the kernel core, then
 packages ScadekOS-owned payloads into the boot initrd:
 
-- `userspace/init/init.S` becomes `/init`
-- `userspace/hello/hello.S` becomes `/hello`
+- `userspace/init/init.c` becomes `/init`
+- `userspace/hello/hello.c` becomes `/hello` and `/bin/hello`
 - `userspace/grant/grant.S` becomes `/grant-test`
 - `userspace/ring/ring.S` becomes `/ring-test`
+- `userspace/runner/runner.c` becomes `/runner`
+- `userspace/prompt/prompt.c` becomes `/prompt`
 - `userspace/libscadek/` provides the minimal SCDK-native user ABI library
 - `initrd/etc/scdk.conf` remains for SCDK boot-configuration compatibility
-- `initrd/etc/scadekos.conf` is the ScadekOS boot policy placeholder
+- `initrd/etc/scadekos.conf` is the ScadekOS boot policy manifest
+- `initrd/etc/scadek.rc` is the deterministic devpreview boot script
 - `VERSION` is packaged as `/etc/scadekos.version`
 - `KERNEL_VERSION` is packaged as `/etc/scdk.version`
 - `initrd/hello.txt` is the VFS/tmpfs smoke-test file
 
-The M24 user ABI still passes one bootstrap endpoint capability to a flat user
-program. ScadekOS `/init` receives the proc endpoint and spawns `/hello` and
-`/ring-test`. The kernel M24 self-tests load `/grant-test` through the
-grant-test endpoint and `/ring-test` through the console endpoint.
+The M30 flat-user ABI still passes one bootstrap endpoint capability to a flat
+user program. ScadekOS `/init` receives the proc endpoint and spawns `/runner`,
+`/bin/hello`, `/ring-test`, and `/prompt`. Programs spawned through proc receive
+the console endpoint and use grant-backed console messages rather than direct
+serial or framebuffer access.
 
-The grant/ring demos cover:
+The devpreview.1 boot path makes these M30 properties visible:
 
-- read-only user grant creation
-- service-side grant reads without raw user pointers
-- write denial, bounds rejection, and revoke validation
-- ring creation and endpoint binding
-- 16 descriptor submissions
-- 16 completion polls
+- local framebuffer text output before ScadekOS `/init`
+- ScadekOS command-runner output and prompt through the console endpoint
+- user grant creation/revoke and grant-backed console writes
+- ring creation, endpoint binding, 16 submissions, and 16 completions
+- capability revoke rejection markers
+- user fault isolation without taking down the kernel
+- timer/preemption markers
+- device-manager fake device and queue authorization markers
+- M30 architecture-review completion markers
 
 `libscadek` currently wraps endpoint calls, grant create/revoke, ring
-create/bind/submit/poll, yield, and exit for flat user programs. It is not a
-libc, POSIX layer, shell runtime, allocator, or package manager.
+create/bind/submit/poll, console writes, TTY polling helpers, proc spawn,
+yield, and exit for flat user programs. It is not a libc, POSIX layer, shell
+runtime, allocator, or package manager.
 
 ## Build
 
@@ -114,6 +122,15 @@ make run
 
 This uses QEMU and COM1 serial output, matching the SCDK development loop.
 
+To boot without a configured serial port:
+
+```sh
+make run-framebuffer
+```
+
+Serial is an optional debug sink. Normal ScadekOS console output goes through
+the SCDK console endpoint and appears on the framebuffer text console.
+
 ## Smoke Test
 
 ```sh
@@ -121,24 +138,45 @@ SCADEKOS_SCDK_DEVTOOLS=/home/taosiyuan/dev/SCDK/.devtools make smoke
 ```
 
 The smoke test boots QEMU briefly, captures serial output in
-`build/scadekos-boot.log`, and verifies these dev.3 markers:
+`build/scadekos-boot.log`, and verifies devpreview.1 plus M30 markers:
 
 ```text
-[initrd] file: /etc/scadekos.conf
-[initrd] file: /etc/scdk.version
-[initrd] file: /grant-test
-[initrd] file: /ring-test
+[console] framebuffer text backend ok
+[tty] input event path pass
 [loader] loading /init
-[proc] spawn /hello
-[scadekos] version 0.1.0-dev.3
-[scadekos] hello from /hello
+[proc] spawn /runner
+[scadekos] command runner started
+scadek:/> version
+[proc] spawn /bin/hello
+[hello] hello from ScadekOS
 [grant] user read grant pass
-[grant] revoke pass
+[revoke] cap revoke pass
+[fault] task killed
+[timer] tick ok
+[devmgr] fake device registered
+[m30] architecture review complete
 [scadekos] libscadek ring console write
-[ring] submit batch 16
 [ring] completion batch 16 pass
-[boot] scadekos dev.3 complete
-[boot] milestone 24 complete
+[boot] milestone 30 complete
+```
+
+The no-serial framebuffer smoke test boots QEMU with `-serial none`, captures a
+framebuffer screenshot, and checks that the screen is nonblank:
+
+```sh
+SCADEKOS_SCDK_DEVTOOLS=/home/taosiyuan/dev/SCDK/.devtools make smoke-no-serial
+```
+
+The screenshot is written to:
+
+```text
+build/scadekos-no-serial.ppm
+```
+
+It is captured during the prompt window and should visibly include:
+
+```text
+scadek:/>
 ```
 
 ## Kernel Submodule

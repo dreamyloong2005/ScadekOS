@@ -2,6 +2,6 @@
 
 This directory contains the small ScadekOS-owned console smoke-test program.
 
-For `0.1.0-dev.3`, `/hello` receives the SCDK console endpoint as its bootstrap
-capability, writes the ScadekOS version and boot marker through an
-`libscadek` endpoint/message call, then exits.
+For `0.1.0-devpreview.1`, `/hello` receives the SCDK console endpoint as its
+bootstrap capability, writes the ScadekOS version and boot marker through a
+grant-backed `libscadek` console call, then exits.
