@@ -22,9 +22,9 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-devpreview.3`
-Kernel version: `SCDK 0.4.0-alpha.3`
-Kernel commit: `c3457116a64471c800a205027b434d42ece526ce`
+Current version: `0.1.0-devpreview.4`
+Kernel version: `SCDK 0.4.0-alpha.4`
+Kernel commit: `2f59d1f32b4aca1dec24612783b537915e60375b`
 
 This repository currently implements **ScadekOS devpreview.3 over the SCDK M31
 kernel/OS parallel baseline**.

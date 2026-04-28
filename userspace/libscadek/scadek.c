@@ -128,6 +128,50 @@ scadek_status_t scadek_console_clear(scadek_cap_t console) {
     return scadek_endpoint_call(console, &message);
 }
 
+scadek_status_t scadek_console_scroll(scadek_cap_t console, int32_t lines) {
+    struct scadek_message message;
+
+    if (console == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message,
+                        0,
+                        SCADEK_SERVICE_CONSOLE,
+                        SCADEK_MSG_CONSOLE_SCROLL);
+    message.arg0 = (uint64_t)(int64_t)lines;
+    return scadek_endpoint_call(console, &message);
+}
+
+scadek_status_t scadek_console_get_info(scadek_cap_t console,
+                                        struct scadek_console_info *out) {
+    struct scadek_message message;
+    scadek_status_t status;
+
+    if (console == 0 || out == 0) {
+        return SCADEK_ERR_INVAL;
+    }
+
+    scadek_message_init(&message,
+                        0,
+                        SCADEK_SERVICE_CONSOLE,
+                        SCADEK_MSG_CONSOLE_GET_INFO);
+    status = scadek_endpoint_call(console, &message);
+    if (status != SCADEK_OK) {
+        return status;
+    }
+    if ((scadek_status_t)message.status != SCADEK_OK) {
+        return (scadek_status_t)message.status;
+    }
+
+    out->columns = (uint32_t)message.arg0;
+    out->rows = (uint32_t)message.arg1;
+    out->cursor_x = (uint32_t)(message.arg2 >> 32u);
+    out->cursor_y = (uint32_t)message.arg2;
+    out->flags = (uint32_t)message.arg3;
+    return SCADEK_OK;
+}
+
 scadek_status_t scadek_tty_poll_event(scadek_cap_t tty,
                                       struct scadek_input_event *out) {
     struct scadek_message message;

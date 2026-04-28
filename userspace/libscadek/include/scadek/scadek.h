@@ -55,6 +55,7 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_MSG_CONSOLE_CLEAR            0x2001ull
 #define SCADEK_MSG_CONSOLE_GET_INFO         0x2002ull
 #define SCADEK_MSG_CONSOLE_BIND_OUTPUT_RING 0x2003ull
+#define SCADEK_MSG_CONSOLE_SCROLL           0x2004ull
 
 #define SCADEK_MSG_TTY_POLL_EVENT      0x2100ull
 #define SCADEK_MSG_TTY_BIND_INPUT_RING 0x2101ull
@@ -71,7 +72,25 @@ typedef uint64_t scadek_cap_t;
 #define SCADEK_INPUT_KEY_DOWN 1u
 #define SCADEK_INPUT_KEY_UP   2u
 
-#define SCADEK_INPUT_MOD_SHIFT (1u << 0)
+#define SCADEK_INPUT_MOD_SHIFT     (1u << 0)
+#define SCADEK_INPUT_MOD_CAPS_LOCK (1u << 1)
+
+#define SCADEK_KEY_ENTER      13u
+#define SCADEK_KEY_BACKSPACE  8u
+#define SCADEK_KEY_TAB        9u
+#define SCADEK_KEY_ESCAPE     27u
+#define SCADEK_KEY_CAPS_LOCK  0x3au
+#define SCADEK_KEY_HOME       0x100u
+#define SCADEK_KEY_UP         0x101u
+#define SCADEK_KEY_PAGE_UP    0x102u
+#define SCADEK_KEY_LEFT       0x103u
+#define SCADEK_KEY_RIGHT      0x104u
+#define SCADEK_KEY_END        0x105u
+#define SCADEK_KEY_DOWN       0x106u
+#define SCADEK_KEY_PAGE_DOWN  0x107u
+
+#define SCADEK_CONSOLE_INFO_SERIAL_MIRROR    1u
+#define SCADEK_CONSOLE_INFO_FRAMEBUFFER_TEXT 2u
 
 #define SCADEK_CONSOLE_WRITE_MAX 128ull
 #define SCADEK_VFS_MAX_NAME 64ull
@@ -116,6 +135,14 @@ struct scadek_input_event {
     uint32_t flags;
 };
 
+struct scadek_console_info {
+    uint32_t columns;
+    uint32_t rows;
+    uint32_t cursor_x;
+    uint32_t cursor_y;
+    uint32_t flags;
+};
+
 struct scadek_vfs_stat {
     uint64_t type;
     uint64_t size;
@@ -153,6 +180,9 @@ scadek_status_t scadek_console_write(scadek_cap_t console,
                                      uint64_t length);
 scadek_status_t scadek_console_puts(scadek_cap_t console, const char *s);
 scadek_status_t scadek_console_clear(scadek_cap_t console);
+scadek_status_t scadek_console_scroll(scadek_cap_t console, int32_t lines);
+scadek_status_t scadek_console_get_info(scadek_cap_t console,
+                                        struct scadek_console_info *out);
 scadek_status_t scadek_tty_poll_event(scadek_cap_t tty,
                                       struct scadek_input_event *out);
 scadek_status_t scadek_tty_read_line(scadek_cap_t tty,

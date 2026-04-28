@@ -4,7 +4,7 @@
 #include <scadek/scadek.h>
 
 #ifndef SCADEKOS_VERSION
-#define SCADEKOS_VERSION "0.1.0-devpreview.3"
+#define SCADEKOS_VERSION "0.1.0-devpreview.4"
 #endif
 
 void _start(scadek_cap_t console) {

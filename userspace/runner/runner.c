@@ -4,11 +4,11 @@
 #include <scadek/scadek.h>
 
 #ifndef SCADEKOS_VERSION
-#define SCADEKOS_VERSION "0.1.0-devpreview.3"
+#define SCADEKOS_VERSION "0.1.0-devpreview.4"
 #endif
 
 #ifndef SCDK_VERSION
-#define SCDK_VERSION "0.4.0-alpha.3"
+#define SCDK_VERSION "0.4.0-alpha.4"
 #endif
 
 #define RUNNER_PATH_MAX 128u
@@ -69,6 +69,14 @@ static int chr_eq(char a, char b) {
     return a == b;
 }
 
+static char ascii_lower(char c) {
+    if (c >= 'A' && c <= 'Z') {
+        return (char)(c - 'A' + 'a');
+    }
+
+    return c;
+}
+
 static int str_eq(const char *a, const char *b) {
     uint64_t i = 0;
 
@@ -78,6 +86,23 @@ static int str_eq(const char *a, const char *b) {
 
     while (a[i] != '\0' && b[i] != '\0') {
         if (!chr_eq(a[i], b[i])) {
+            return 0;
+        }
+        i++;
+    }
+
+    return a[i] == '\0' && b[i] == '\0';
+}
+
+static int str_eq_ci(const char *a, const char *b) {
+    uint64_t i = 0;
+
+    if (a == 0 || b == 0) {
+        return 0;
+    }
+
+    while (a[i] != '\0' && b[i] != '\0') {
+        if (!chr_eq(ascii_lower(a[i]), ascii_lower(b[i]))) {
             return 0;
         }
         i++;
@@ -126,6 +151,48 @@ static void console_write_char(struct runner_state *state, char c) {
 static void console_line(struct runner_state *state, const char *s) {
     console_write(state, s);
     console_write(state, "\r\n");
+}
+
+static int32_t console_scroll_page_lines(struct runner_state *state) {
+    struct scadek_console_info info;
+
+    if (state != 0 &&
+        scadek_console_get_info(state->console, &info) == SCADEK_OK &&
+        info.rows > 1u) {
+        return (int32_t)(info.rows - 1u);
+    }
+
+    return 8;
+}
+
+static int handle_manual_scroll_key(struct runner_state *state,
+                                    const struct scadek_input_event *event) {
+    int32_t page;
+
+    if (state == 0 || event == 0 || event->ascii != 0u) {
+        return 0;
+    }
+
+    if (event->keycode == SCADEK_KEY_UP) {
+        (void)scadek_console_scroll(state->console, -1);
+        return 1;
+    }
+    if (event->keycode == SCADEK_KEY_DOWN) {
+        (void)scadek_console_scroll(state->console, 1);
+        return 1;
+    }
+
+    page = console_scroll_page_lines(state);
+    if (event->keycode == SCADEK_KEY_PAGE_UP) {
+        (void)scadek_console_scroll(state->console, -page);
+        return 1;
+    }
+    if (event->keycode == SCADEK_KEY_PAGE_DOWN) {
+        (void)scadek_console_scroll(state->console, page);
+        return 1;
+    }
+
+    return 0;
 }
 
 static void path_pop(char *out, uint64_t *len) {
@@ -411,31 +478,31 @@ static int execute_line(struct runner_state *state, char *line) {
         return 1;
     }
 
-    if (str_eq(cmd, "help")) {
+    if (str_eq_ci(cmd, "help")) {
         cmd_help(state);
-    } else if (str_eq(cmd, "version")) {
+    } else if (str_eq_ci(cmd, "version")) {
         cmd_version(state);
-    } else if (str_eq(cmd, "clear")) {
+    } else if (str_eq_ci(cmd, "clear")) {
         (void)scadek_console_clear(state->console);
-    } else if (str_eq(cmd, "pwd")) {
+    } else if (str_eq_ci(cmd, "pwd")) {
         cmd_pwd(state);
-    } else if (str_eq(cmd, "cd")) {
+    } else if (str_eq_ci(cmd, "cd")) {
         cmd_cd(state, rest);
-    } else if (str_eq(cmd, "ls")) {
+    } else if (str_eq_ci(cmd, "ls")) {
         cmd_ls(state, rest);
-    } else if (str_eq(cmd, "cat")) {
+    } else if (str_eq_ci(cmd, "cat")) {
         cmd_cat(state, rest);
-    } else if (str_eq(cmd, "run")) {
+    } else if (str_eq_ci(cmd, "run")) {
         cmd_run(state, rest);
-    } else if (str_eq(cmd, "services")) {
+    } else if (str_eq_ci(cmd, "services")) {
         cmd_services(state);
-    } else if (str_eq(cmd, "caps")) {
+    } else if (str_eq_ci(cmd, "caps")) {
         cmd_caps(state);
-    } else if (str_eq(cmd, "rings")) {
+    } else if (str_eq_ci(cmd, "rings")) {
         cmd_rings(state);
-    } else if (str_eq(cmd, "grants")) {
+    } else if (str_eq_ci(cmd, "grants")) {
         cmd_grants(state);
-    } else if (str_eq(cmd, "exit")) {
+    } else if (str_eq_ci(cmd, "exit")) {
         return 0;
     } else {
         console_line(state, "unknown command");
@@ -519,6 +586,9 @@ static int read_interactive_line(struct runner_state *state,
             return 0;
         }
         if (event.type != SCADEK_INPUT_KEY_DOWN) {
+            continue;
+        }
+        if (handle_manual_scroll_key(state, &event)) {
             continue;
         }
         if (event.ascii == '\n' || event.ascii == '\r') {
