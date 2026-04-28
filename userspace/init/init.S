@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 /* Copyright (c) 2026 The Scadek OS Project contributors */
 
-#include "@SCADEK_RUNTIME_INC@"
+#include <scadek/scadek.inc>
 
 .section .text
 .global _start
@@ -12,17 +12,36 @@ _start:
     subq $SCADEK_MSG_SIZE, %rsp
     movq %rsp, %rsi
 
-    scadek_proc_spawn %rsi, hello_path, (hello_path_end - hello_path)
-    scadek_endpoint_call %rbx, %rsi
+    movq $0, SCADEK_MSG_SENDER(%rsi)
+    movq $SCADEK_SERVICE_PROC, SCADEK_MSG_TARGET(%rsi)
+    movq $SCADEK_MSG_PROCESS_SPAWN, SCADEK_MSG_TYPE(%rsi)
+    leaq hello_path(%rip), %rax
+    movq %rax, SCADEK_MSG_ARG0(%rsi)
+    movq $(hello_path_end - hello_path), SCADEK_MSG_ARG1(%rsi)
+    movq $0, SCADEK_MSG_ARG2(%rsi)
+    movq $0, SCADEK_MSG_ARG3(%rsi)
+    movq $0, SCADEK_MSG_STATUS(%rsi)
+    movq %rbx, %rdi
+    call scadek_endpoint_call
 
     movq %rsp, %rsi
-    scadek_proc_spawn %rsi, ring_path, (ring_path_end - ring_path)
-    scadek_endpoint_call %rbx, %rsi
+    movq $0, SCADEK_MSG_SENDER(%rsi)
+    movq $SCADEK_SERVICE_PROC, SCADEK_MSG_TARGET(%rsi)
+    movq $SCADEK_MSG_PROCESS_SPAWN, SCADEK_MSG_TYPE(%rsi)
+    leaq ring_path(%rip), %rax
+    movq %rax, SCADEK_MSG_ARG0(%rsi)
+    movq $(ring_path_end - ring_path), SCADEK_MSG_ARG1(%rsi)
+    movq $0, SCADEK_MSG_ARG2(%rsi)
+    movq $0, SCADEK_MSG_ARG3(%rsi)
+    movq $0, SCADEK_MSG_STATUS(%rsi)
+    movq %rbx, %rdi
+    call scadek_endpoint_call
 
-    scadek_exit
+    movq $0, %rdi
+    call scadek_exit
 
 .Lhalt:
-    hlt
+    pause
     jmp .Lhalt
 
 hello_path:

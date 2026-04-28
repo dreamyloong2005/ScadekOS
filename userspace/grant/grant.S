@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 /* Copyright (c) 2026 The Scadek OS Project contributors */
 
-#include "@SCADEK_RUNTIME_INC@"
+#include <scadek/scadek.inc>
 
 .section .text
 .global _start
@@ -9,37 +9,47 @@
 _start:
     movq %rdi, %rbx
 
-    scadek_grant_create_read grant_payload, (grant_payload_end - grant_payload), %rbx
+    leaq grant_payload(%rip), %rdi
+    movq $(grant_payload_end - grant_payload), %rsi
+    movq $SCADEK_RIGHT_READ, %rdx
+    movq %rbx, %rcx
+    call scadek_grant_create
     movq %rax, %r12
 
     subq $SCADEK_MSG_SIZE, %rsp
     movq %rsp, %rsi
 
-    scadek_message_clear %rsi
-    movq $SCDK_SERVICE_GRANT_TEST, SCADEK_MSG_TARGET(%rsi)
-    movq $SCDK_MSG_READ, SCADEK_MSG_TYPE(%rsi)
+    movq $0, SCADEK_MSG_SENDER(%rsi)
+    movq $SCADEK_SERVICE_GRANT_TEST, SCADEK_MSG_TARGET(%rsi)
+    movq $SCADEK_MSG_READ, SCADEK_MSG_TYPE(%rsi)
     movq %r12, SCADEK_MSG_ARG0(%rsi)
     movq $0, SCADEK_MSG_ARG1(%rsi)
     movq $(grant_payload_end - grant_payload), SCADEK_MSG_ARG2(%rsi)
     movq $1, SCADEK_MSG_ARG3(%rsi)
-    scadek_endpoint_call %rbx, %rsi
+    movq $0, SCADEK_MSG_STATUS(%rsi)
+    movq %rbx, %rdi
+    call scadek_endpoint_call
 
-    scadek_grant_revoke %r12
+    movq %r12, %rdi
+    call scadek_grant_revoke
 
     movq %rsp, %rsi
-    scadek_message_clear %rsi
-    movq $SCDK_SERVICE_GRANT_TEST, SCADEK_MSG_TARGET(%rsi)
-    movq $SCDK_MSG_READ, SCADEK_MSG_TYPE(%rsi)
+    movq $0, SCADEK_MSG_SENDER(%rsi)
+    movq $SCADEK_SERVICE_GRANT_TEST, SCADEK_MSG_TARGET(%rsi)
+    movq $SCADEK_MSG_READ, SCADEK_MSG_TYPE(%rsi)
     movq %r12, SCADEK_MSG_ARG0(%rsi)
     movq $0, SCADEK_MSG_ARG1(%rsi)
     movq $(grant_payload_end - grant_payload), SCADEK_MSG_ARG2(%rsi)
     movq $2, SCADEK_MSG_ARG3(%rsi)
-    scadek_endpoint_call %rbx, %rsi
+    movq $0, SCADEK_MSG_STATUS(%rsi)
+    movq %rbx, %rdi
+    call scadek_endpoint_call
 
-    scadek_exit
+    movq $0, %rdi
+    call scadek_exit
 
 .Lhalt:
-    hlt
+    pause
     jmp .Lhalt
 
 grant_payload:

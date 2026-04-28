@@ -1,0 +1,62 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+/* Copyright (c) 2026 The Scadek OS Project contributors */
+
+.set SCADEK_OK, 0
+.set SCADEK_ERR_INVAL, -1
+.set SCADEK_ERR_NOMEM, -2
+.set SCADEK_ERR_NOENT, -3
+.set SCADEK_ERR_PERM, -4
+.set SCADEK_ERR_BOUNDS, -5
+.set SCADEK_ERR_BUSY, -6
+.set SCADEK_ERR_NOTSUP, -7
+
+.set SCADEK_RIGHT_READ, 1
+.set SCADEK_RIGHT_WRITE, 2
+.set SCADEK_RIGHT_EXEC, 4
+.set SCADEK_RIGHT_MAP, 8
+.set SCADEK_RIGHT_SEND, 16
+.set SCADEK_RIGHT_RECV, 32
+.set SCADEK_RIGHT_BIND, 64
+.set SCADEK_RIGHT_REVOKE, 128
+
+.set SCADEK_SERVICE_CONSOLE, 1
+.set SCADEK_SERVICE_TMPFS, 2
+.set SCADEK_SERVICE_VFS, 3
+.set SCADEK_SERVICE_PROC, 4
+.set SCADEK_SERVICE_GRANT_TEST, 5
+
+.set SCADEK_MSG_NONE, 0
+.set SCADEK_MSG_OPEN, 1
+.set SCADEK_MSG_CLOSE, 2
+.set SCADEK_MSG_READ, 3
+.set SCADEK_MSG_WRITE, 4
+.set SCADEK_MSG_PROCESS_SPAWN, 9
+.set SCADEK_MSG_PROCESS_EXIT, 10
+.set SCADEK_MSG_PROCESS_WAIT_STUB, 11
+.set SCADEK_MSG_RING_PROCESS, 12
+
+.set SCADEK_RING_OP_NONE, 0
+.set SCADEK_RING_OP_CONSOLE_WRITE, 1
+.set SCADEK_RING_BATCH, 16
+.set SCADEK_RING_DESC_SIZE, 48
+.set SCADEK_RING_COMPLETION_SIZE, 32
+
+.set SCADEK_MSG_SENDER, 0
+.set SCADEK_MSG_TARGET, 8
+.set SCADEK_MSG_TYPE, 16
+.set SCADEK_MSG_ARG0, 24
+.set SCADEK_MSG_ARG1, 32
+.set SCADEK_MSG_ARG2, 40
+.set SCADEK_MSG_ARG3, 48
+.set SCADEK_MSG_STATUS, 56
+.set SCADEK_MSG_SIZE, 64
+
+.extern scadek_endpoint_call
+.extern scadek_grant_create
+.extern scadek_grant_revoke
+.extern scadek_ring_create
+.extern scadek_ring_bind
+.extern scadek_ring_submit
+.extern scadek_ring_poll
+.extern scadek_yield
+.extern scadek_exit

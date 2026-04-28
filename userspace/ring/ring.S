@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 /* Copyright (c) 2026 The Scadek OS Project contributors */
 
-#include "@SCADEK_RUNTIME_INC@"
+#include <scadek/scadek.inc>
 
 .section .text
 .global _start
@@ -9,13 +9,20 @@
 _start:
     movq %rdi, %rbx
 
-    scadek_grant_create_read ring_payload, (ring_payload_end - ring_payload), %rbx
+    leaq ring_payload(%rip), %rdi
+    movq $(ring_payload_end - ring_payload), %rsi
+    movq $SCADEK_RIGHT_READ, %rdx
+    movq %rbx, %rcx
+    call scadek_grant_create
     movq %rax, %r12
 
-    scadek_ring_create SCDK_RING_BATCH
+    movq $SCADEK_RING_BATCH, %rdi
+    call scadek_ring_create
     movq %rax, %r13
 
-    scadek_ring_bind %r13, %rbx
+    movq %r13, %rdi
+    movq %rbx, %rsi
+    call scadek_ring_bind
     testq %rax, %rax
     jne .Lbad
 
@@ -24,14 +31,14 @@ _start:
     movq $0, %r15
 
 .Lfill_desc:
-    cmpq $SCDK_RING_BATCH, %r15
+    cmpq $SCADEK_RING_BATCH, %r15
     je .Lsubmit
 
     movq %r15, %rax
-    imulq $SCDK_RING_DESC_SIZE, %rax, %rax
+    imulq $SCADEK_RING_DESC_SIZE, %rax, %rax
     leaq (%r14,%rax), %rsi
 
-    movq $SCDK_RING_OP_CONSOLE_WRITE, 0(%rsi)
+    movq $SCADEK_RING_OP_CONSOLE_WRITE, 0(%rsi)
     movq %rbx, 8(%rsi)
     movq %r12, 16(%rsi)
     movq $0, 24(%rsi)
@@ -42,16 +49,23 @@ _start:
     jmp .Lfill_desc
 
 .Lsubmit:
-    scadek_ring_submit %r13, %r14, SCDK_RING_BATCH
+    movq %r13, %rdi
+    movq %r14, %rsi
+    movq $SCADEK_RING_BATCH, %rdx
+    call scadek_ring_submit
     testq %rax, %rax
     jne .Lbad
 
     leaq 1024(%r14), %r15
-    scadek_ring_poll %r13, %r15, SCDK_RING_BATCH
-    cmpq $SCDK_RING_BATCH, %rax
+    movq %r13, %rdi
+    movq %r15, %rsi
+    movq $SCADEK_RING_BATCH, %rdx
+    call scadek_ring_poll
+    cmpq $SCADEK_RING_BATCH, %rax
     jne .Lbad
 
-    scadek_exit
+    movq $0, %rdi
+    call scadek_exit
 
 .Lhalt:
     pause
@@ -62,7 +76,7 @@ _start:
     jmp .Lbad
 
 ring_payload:
-    .ascii "[scadekos] ring runtime console write"
+    .ascii "[scadekos] libscadek ring console write"
 ring_payload_end:
 .size _start, . - _start
 

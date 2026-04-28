@@ -26,13 +26,13 @@
 - Start services through SCDK-native proc, VFS, endpoint, and capability paths.
 - Status: `/init` spawns `/hello` and `/ring-test` through proc service on SCDK M24.
 
-## Stage 3: Grant/Ring Runtime Demos
+## Stage 3: Grant/Ring libscadek Demos
 
-- Add a small SCDK-native flat-binary runtime include.
+- Add a small SCDK-native `libscadek` user ABI library.
 - Add `/grant-test` for user-visible grant create/read/revoke validation.
 - Add `/ring-test` for grant-backed ring descriptor submission and completion polling.
 - Validate M24 grant/ring logs in the smoke test.
-- Status: implemented in ScadekOS `0.1.0-dev.2`.
+- Status: implemented in ScadekOS `0.1.0-dev.3`.
 
 ## Stage 4: Service Policy
 

@@ -13,7 +13,7 @@ with clear ownership.
 ScadekOS/
   kernel/scdk/      SCDK submodule pinned to a reviewed kernel commit
   initrd/           ScadekOS-owned default initrd payloads
-  userspace/        ScadekOS-owned user programs and runtime work
+  userspace/        ScadekOS-owned user programs and libscadek work
   services/         ScadekOS service composition and policy stubs
   configs/          OS-level configuration
   docs/             architecture and roadmap notes
@@ -22,12 +22,12 @@ ScadekOS/
 
 ## Current State
 
-Current version: `0.1.0-dev.2`
+Current version: `0.1.0-dev.3`
 Kernel version: `SCDK 0.3.0-alpha.2`
 Kernel commit: `6d617e2bef829fc0e87d0b567c2081c21962e123`
 
-This repository currently implements **ScadekOS dev.2: SCDK M24 grant/ring
-integration baseline**.
+This repository currently implements **ScadekOS dev.3: minimal libscadek over
+the SCDK M24 grant/ring baseline**.
 
 The top-level build uses the pinned SCDK submodule for the kernel core, then
 packages ScadekOS-owned payloads into the boot initrd:
@@ -36,7 +36,7 @@ packages ScadekOS-owned payloads into the boot initrd:
 - `userspace/hello/hello.S` becomes `/hello`
 - `userspace/grant/grant.S` becomes `/grant-test`
 - `userspace/ring/ring.S` becomes `/ring-test`
-- `userspace/runtime/scadek_runtime.inc` is the SCDK-native flat-binary helper layer
+- `userspace/libscadek/` provides the minimal SCDK-native user ABI library
 - `initrd/etc/scdk.conf` remains for SCDK boot-configuration compatibility
 - `initrd/etc/scadekos.conf` is the ScadekOS boot policy placeholder
 - `VERSION` is packaged as `/etc/scadekos.version`
@@ -56,6 +56,10 @@ The grant/ring demos cover:
 - ring creation and endpoint binding
 - 16 descriptor submissions
 - 16 completion polls
+
+`libscadek` currently wraps endpoint calls, grant create/revoke, ring
+create/bind/submit/poll, yield, and exit for flat user programs. It is not a
+libc, POSIX layer, shell runtime, allocator, or package manager.
 
 ## Build
 
@@ -117,7 +121,7 @@ SCADEKOS_SCDK_DEVTOOLS=/home/taosiyuan/dev/SCDK/.devtools make smoke
 ```
 
 The smoke test boots QEMU briefly, captures serial output in
-`build/scadekos-boot.log`, and verifies these dev.2 markers:
+`build/scadekos-boot.log`, and verifies these dev.3 markers:
 
 ```text
 [initrd] file: /etc/scadekos.conf
@@ -126,13 +130,14 @@ The smoke test boots QEMU briefly, captures serial output in
 [initrd] file: /ring-test
 [loader] loading /init
 [proc] spawn /hello
-[scadekos] version 0.1.0-dev.2
+[scadekos] version 0.1.0-dev.3
 [scadekos] hello from /hello
 [grant] user read grant pass
 [grant] revoke pass
+[scadekos] libscadek ring console write
 [ring] submit batch 16
 [ring] completion batch 16 pass
-[boot] scadekos dev.2 complete
+[boot] scadekos dev.3 complete
 [boot] milestone 24 complete
 ```
 

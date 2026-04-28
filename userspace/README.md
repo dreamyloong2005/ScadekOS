@@ -9,5 +9,5 @@ The current flat binaries are:
 - `/grant-test`: user-visible grant demo used by SCDK M24 self-tests.
 - `/ring-test`: user-visible ring + grant data-plane demo.
 
-Shared assembly helpers live in `runtime/`. This runtime is SCDK-native and is
-not a libc or POSIX layer.
+The current flat binaries link against `libscadek`, a tiny SCDK-native user ABI
+library. It is not a libc or POSIX layer.

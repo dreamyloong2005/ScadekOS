@@ -32,13 +32,11 @@ check-kernel-env: submodules
 
 prepare-payload:
 	rm -rf $(PAYLOAD_DIR) $(SCDK_INITRD_ROOT)
-	mkdir -p $(PAYLOAD_USER_DIR)/runtime $(PAYLOAD_INITRD_DIR)
-	cp userspace/runtime/scadek_runtime.inc $(PAYLOAD_USER_DIR)/runtime/scadek_runtime.inc
-	sed 's|@SCADEK_RUNTIME_INC@|$(CURDIR)/$(PAYLOAD_USER_DIR)/runtime/scadek_runtime.inc|g' userspace/init/init.S > $(PAYLOAD_USER_DIR)/init.S
-	sed -e 's|@SCADEK_RUNTIME_INC@|$(CURDIR)/$(PAYLOAD_USER_DIR)/runtime/scadek_runtime.inc|g' \
-		-e 's/@SCADEKOS_VERSION@/$(SCADEKOS_VERSION)/g' userspace/hello/hello.S > $(PAYLOAD_USER_DIR)/hello.S
-	sed 's|@SCADEK_RUNTIME_INC@|$(CURDIR)/$(PAYLOAD_USER_DIR)/runtime/scadek_runtime.inc|g' userspace/grant/grant.S > $(PAYLOAD_USER_DIR)/grant.S
-	sed 's|@SCADEK_RUNTIME_INC@|$(CURDIR)/$(PAYLOAD_USER_DIR)/runtime/scadek_runtime.inc|g' userspace/ring/ring.S > $(PAYLOAD_USER_DIR)/ring.S
+	mkdir -p $(PAYLOAD_USER_DIR) $(PAYLOAD_INITRD_DIR)
+	cp userspace/init/init.S $(PAYLOAD_USER_DIR)/init.S
+	sed 's/@SCADEKOS_VERSION@/$(SCADEKOS_VERSION)/g' userspace/hello/hello.S > $(PAYLOAD_USER_DIR)/hello.S
+	cp userspace/grant/grant.S $(PAYLOAD_USER_DIR)/grant.S
+	cp userspace/ring/ring.S $(PAYLOAD_USER_DIR)/ring.S
 	cp -R initrd/. $(PAYLOAD_INITRD_DIR)/
 	mkdir -p $(PAYLOAD_INITRD_DIR)/etc
 	printf '%s\n' "$(SCADEKOS_VERSION)" > $(PAYLOAD_INITRD_DIR)/etc/scadekos.version
@@ -46,12 +44,8 @@ prepare-payload:
 
 iso: submodules $(VERSION_FILE) $(KERNEL_VERSION_FILE) prepare-payload
 	cd $(KERNEL_DIR) && . ../../tools/kernel-env.sh && \
-		$(MAKE) USER_DIR="$(CURDIR)/$(PAYLOAD_USER_DIR)" \
-		$(SCDK_KERNEL:$(KERNEL_DIR)/%=%) \
-		build/initrd_root/init \
-		build/initrd_root/hello \
-		build/initrd_root/grant-test \
-		build/initrd_root/ring-test
+		$(MAKE) $(SCDK_KERNEL:$(KERNEL_DIR)/%=%)
+	tools/build-users.sh "$(CURDIR)/$(PAYLOAD_USER_DIR)" "$(CURDIR)/$(SCDK_INITRD_ROOT)"
 	cp -R $(PAYLOAD_INITRD_DIR)/. $(SCDK_INITRD_ROOT)/
 	cd $(SCDK_INITRD_ROOT) && tar --format=ustar -cf ../scdk.initrd $(INITRD_TAR_FILES)
 	rm -rf $(SCDK_ISO_DIR)
